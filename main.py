@@ -11,6 +11,7 @@ import torch
 import traceback
 import time
 import yaml
+import wandb
 # import torch.utils.tensorboard as tb
 # from hanging_threads import start_monitoring
 # start_monitoring(seconds_frozen=10, test_interval=100)
@@ -65,6 +66,12 @@ def parse_args_and_config():
     parser.add_argument('--config_mod', nargs='*', type=str, default=[], help='Overrid config options, e.g., model.ngf=64 model.spade=True training.batch_size=32') 
 
     parser.add_argument('--start_at', type=int, default=0, help="For KTH, can start at Kth frame in test and ignore the rest")
+    
+    parser.add_argument('--wandb_project', type=str, default=None, help="Weights & Biases Project Name")
+    
+    parser.add_argument('--wandb_entity', type=str, default=None, help="Weights & Biases Entity Name")
+    
+    parser.add_argument('--wandb_run_name', type=str, default=None, help="Weights & Biases Run Name")
 
 
     args = parser.parse_args()
@@ -376,6 +383,15 @@ def main():
     logging.info("Config =")
     print(">" * 80)
     config_dict = copy.copy(vars(config))
+    
+    if args.wandb_project is not None:
+        wandb.init(
+            project=args.wandb_project,
+            name=args.wandb_run_name,
+            entity=args.wandb_entity,
+            config=config_dict
+        )
+    
     # if not args.test and not args.sample and not args.fast_fid:
     #     del config_dict['tb_logger']
     print(yaml.dump(config_dict, default_flow_style=False))
@@ -412,6 +428,8 @@ def main():
 
 if __name__ == '__main__':
     runner, args, config = main()
+    if wandb.run is not None:
+        wandb.finish()
     if not args.interact:
         sys.exit()
 

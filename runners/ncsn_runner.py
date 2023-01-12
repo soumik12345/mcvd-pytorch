@@ -13,6 +13,7 @@ import scipy.stats as st
 import sys
 import time
 import yaml
+import wandb
 
 import torch
 import torch.nn.functional as F
@@ -410,6 +411,14 @@ class NCSNRunner():
                 self.lr_meter.update(lr)
                 self.grad_norm.update(grad_norm.item())
                 if step == 1 or step % getattr(self.config.training, "log_freq", 1) == 0:
+                    if wandb.run is not None:
+                        wandb.log({
+                            "train time": self.time_train.val,
+                            "step": step,
+                            "lr": lr,
+                            "grad_norm": grad_norm,
+                            "loss": loss.item(),
+                        })
                     logging.info("elapsed: {}, train time: {:.04f}, mem: {:.03f}GB, GPUmem: {:.03f}GB, step: {}, lr: {:.06f}, grad: {:.04f}, loss: {:.04f}".format(
                         str(datetime.timedelta(seconds=(time.time() - self.start_time)) + datetime.timedelta(seconds=self.time_elapsed_prev*3600))[:-3],
                         self.time_train.val, get_proc_mem(), get_GPU_mem(), step, lr, grad_norm, loss.item()))
@@ -432,7 +441,12 @@ class NCSNRunner():
                     if self.config.model.ema:
                         states.append(ema_helper.state_dict())
                     logging.info(f"Saving checkpoint.pt in {self.args.log_path}")
-                    torch.save(states, os.path.join(self.args.log_path, 'checkpoint.pt'))
+                    checkpoint_path = os.path.join(self.args.log_path, 'checkpoint.pt')
+                    torch.save(states, checkpoint_path)
+                    if wandb.run is not None:
+                        artifact = wandb.Artifact(f'checkpoint-{wandb.run.name}-{wandb.run.id}', type='model')
+                        artifact.add_file(checkpoint_path)
+                        wandb.log_artifact(artifact)
                     if step % self.config.training.snapshot_freq == 0:
                         ckpt_path = os.path.join(self.args.log_path, 'checkpoint_{}.pt'.format(step))
                         logging.info(f"Saving {ckpt_path}")
