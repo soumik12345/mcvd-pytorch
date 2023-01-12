@@ -383,15 +383,6 @@ def main():
     logging.info("Config =")
     print(">" * 80)
     config_dict = copy.copy(vars(config))
-    
-    if args.wandb_project is not None:
-        wandb.init(
-            project=args.wandb_project,
-            name=args.wandb_run_name,
-            entity=args.wandb_entity,
-            config=config_dict
-        )
-    
     # if not args.test and not args.sample and not args.fast_fid:
     #     del config_dict['tb_logger']
     print(yaml.dump(config_dict, default_flow_style=False))
@@ -403,7 +394,15 @@ def main():
     #     del config_dict['tb_logger']
     print(yaml.dump(args_dict, default_flow_style=False))
     print("<" * 80)
-
+    
+    if args.wandb_project is not None:
+        wandb.init(
+            project=args.wandb_project,
+            name=args.wandb_run_name,
+            entity=args.wandb_entity,
+            config=config_dict
+        )
+    
     try:
         runner = NCSNRunner(args, config, config_uncond)
         if args.test:

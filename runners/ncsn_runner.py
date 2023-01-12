@@ -413,11 +413,11 @@ class NCSNRunner():
                 if step == 1 or step % getattr(self.config.training, "log_freq", 1) == 0:
                     if wandb.run is not None:
                         wandb.log({
-                            "train time": self.time_train.val,
-                            "step": step,
+                            "train/time": self.time_train.val,
+                            "train/step": step,
                             "lr": lr,
                             "grad_norm": grad_norm,
-                            "loss": loss.item(),
+                            "train/loss": loss.item(),
                         })
                     logging.info("elapsed: {}, train time: {:.04f}, mem: {:.03f}GB, GPUmem: {:.03f}GB, step: {}, lr: {:.06f}, grad: {:.04f}, loss: {:.04f}".format(
                         str(datetime.timedelta(seconds=(time.time() - self.start_time)) + datetime.timedelta(seconds=self.time_elapsed_prev*3600))[:-3],
@@ -431,7 +431,7 @@ class NCSNRunner():
                     break
 
                 # Save model
-                if (step % 1000 == 0 and step != 0) or step % self.config.training.snapshot_freq == 0:
+                if (step % self.config.training.checkpoint_freq == 0 and step != 0) or step % self.config.training.snapshot_freq == 0:
                     states = [
                         scorenet.state_dict(),
                         optimizer.state_dict(),
@@ -446,7 +446,7 @@ class NCSNRunner():
                     if wandb.run is not None:
                         artifact = wandb.Artifact(f'checkpoint-{wandb.run.name}-{wandb.run.id}', type='model')
                         artifact.add_file(checkpoint_path)
-                        wandb.log_artifact(artifact)
+                        wandb.log_artifact(artifact, aliases=["latest", f"step-{step}"])
                     if step % self.config.training.snapshot_freq == 0:
                         ckpt_path = os.path.join(self.args.log_path, 'checkpoint_{}.pt'.format(step))
                         logging.info(f"Saving {ckpt_path}")
@@ -488,6 +488,11 @@ class NCSNRunner():
                     # tb_logger.add_scalar('test_loss', test_dsm_loss, global_step=step)
                     # test_tb_hook()
                     self.losses_test.update(test_dsm_loss.item(), step)
+                    if wandb.run is not None:
+                        wandb.log({
+                            "validation/step": step,
+                            "validation/loss": test_dsm_loss.item(),
+                        })
                     logging.info("elapsed: {}, step: {}, mem: {:.03f}GB, GPUmem: {:.03f}GB, test_loss: {:.04f}".format(
                         str(datetime.timedelta(seconds=(time.time() - self.start_time)) + datetime.timedelta(seconds=self.time_elapsed_prev*3600))[:-3],
                         step, get_proc_mem(), get_GPU_mem(), test_dsm_loss.item()))
@@ -515,6 +520,13 @@ class NCSNRunner():
                             self.psnrs.update(vid_metrics['psnr'])
                             self.ssims.update(vid_metrics['ssim'])
                             self.lpipss.update(vid_metrics['lpips'])
+                            if wandb.run is not None:
+                                wandb.log({
+                                    "validation/mse": vid_metrics['mse'],
+                                    "validation/psnr": vid_metrics['psnr'],
+                                    "validation/ssim": vid_metrics['ssim'],
+                                    "validation/lpips": vid_metrics['lpips'],
+                                })
                             if vid_metrics['mse'] < self.best_mse['mse']:
                                 self.best_mse = vid_metrics
                             if vid_metrics['psnr'] > self.best_psnr['psnr']:
@@ -533,6 +545,13 @@ class NCSNRunner():
                             self.psnrs2.update(vid_metrics['psnr2'])
                             self.ssims2.update(vid_metrics['ssim2'])
                             self.lpipss2.update(vid_metrics['lpips2'])
+                            if wandb.run is not None:
+                                wandb.log({
+                                    "validation/mse": vid_metrics['mse2'],
+                                    "validation/psnr": vid_metrics['psnr2'],
+                                    "validation/ssim": vid_metrics['ssim2'],
+                                    "validation/lpips": vid_metrics['lpips2'],
+                                })
                             if vid_metrics['mse2'] < self.best_mse2['mse2']:
                                 self.best_mse2 = vid_metrics
                             if vid_metrics['psnr2'] > self.best_psnr2['psnr2']:
@@ -548,6 +567,10 @@ class NCSNRunner():
 
                         if self.calc_fvd3:
                             self.fvds3.update(vid_metrics['fvd3'], step)
+                            if wandb.run is not None:
+                                wandb.log({
+                                    "validation/fvd3": vid_metrics['fvd3'],
+                                })
                             if vid_metrics['fvd3'] < self.best_fvd3['fvd3']:
                                 self.best_fvd3 = vid_metrics
 
