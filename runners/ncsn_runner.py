@@ -700,7 +700,9 @@ class NCSNRunner():
 
                         # Save gif
                         imageio.mimwrite(os.path.join(self.args.log_sample_path, f"video_grid_{step}.gif"), gif_frames, fps=4)
-                        del gif_frames
+                        # if wandb.run is not None:
+                        #     wandb.log({f"video_grid_{step}.gif": wandb.Video(f"video_grid_{step}.gif")})
+                        # del gif_frames
 
                         # Stretch out multiple frames horizontally
                         pred = stretch_image(pred, self.config.data.channels, self.config.data.image_size)
@@ -2102,6 +2104,26 @@ class NCSNRunner():
                         if t == futr.shape[1]//self.config.data.channels - 1:
                             gif_frames_futr.append((gif_frame*255).astype('uint8'))
                         del frame, gif_frame
+                
+                # if wandb.run is not None:
+                #     print("\n\n\n\n\n\n\n")
+                #     print(np.array(gif_frames_cond).transpose(0, 3, 1, 2).shape)
+                #     print("\n\n\n\n\n\n\n")
+                #     print(np.array(gif_frames_futr).transpose(0, 3, 1, 2).shape)
+                #     print("\n\n\n\n\n\n\n")
+                #     print(np.array(gif_frames_pred).transpose(0, 3, 1, 2).shape)
+                #     print("\n\n\n\n\n\n\n")
+                #     print(np.array(gif_frames_pred2).transpose(0, 3, 1, 2).shape)
+                #     print("\n\n\n\n\n\n\n")
+                #     print(np.array(gif_frames_pred3).transpose(0, 3, 1, 2).shape)
+                #     print("\n\n\n\n\n\n\n")
+                #     wandb.log({
+                #         "gif_frames_cond": wandb.Video(np.array(gif_frames_cond).transpose(0, 3, 1, 2)),
+                #         "gif_frames_futr": wandb.Video(np.array(gif_frames_futr).transpose(0, 3, 1, 2)),
+                #         "gif_frames_pred": wandb.Video(np.array(gif_frames_pred).transpose(0, 3, 1, 2)),
+                #         "gif_frames_pred2": wandb.Video(np.array(gif_frames_pred2).transpose(0, 3, 1, 2)),
+                #         "gif_frames_pred3": wandb.Video(np.array(gif_frames_pred3).transpose(0, 3, 1, 2)),
+                #     })
 
                 # Save gif
                 if self.condp == 0.0 and self.futrf == 0:                           # (1) Prediction
@@ -2110,31 +2132,49 @@ class NCSNRunner():
                 elif self.condp == 0.0 and self.futrf > 0 and self.futrp == 0.0:    # (1) Interpolation
                     imageio.mimwrite(os.path.join(self.args.log_sample_path if train else self.args.video_folder, f"videos_interp_{ckpt}_{i}.gif"),
                                      [*gif_frames_cond, *gif_frames_pred, *gif_frames_futr], fps=4)
+                    # if wandb.run is not None:
+                    #         wandb.log({f"videos_interp_{ckpt}_{i}.gif": wandb.Video(f"videos_interp_{ckpt}_{i}.gif")})
                 elif self.condp == 0.0 and self.futrf > 0 and self.futrp > 0.0:     # (1) Interp + (2) Pred
                     imageio.mimwrite(os.path.join(self.args.log_sample_path if train else self.args.video_folder, f"videos_interp_{ckpt}_{i}.gif"),
                                      [*gif_frames_cond, *gif_frames_pred, *gif_frames_futr], fps=4)
+                    # if wandb.run is not None:
+                    #         wandb.log({f"videos_interp_{ckpt}_{i}.gif": wandb.Video(f"videos_interp_{ckpt}_{i}.gif")})
                     imageio.mimwrite(os.path.join(self.args.log_sample_path if train else self.args.video_folder, f"videos_pred_{ckpt}_{i}.gif"),
                                      [*gif_frames_cond, *gif_frames_pred2], fps=4)
                 elif self.condp > 0.0 and self.futrf == 0:                         # (1) Pred + (3) Gen
                     imageio.mimwrite(os.path.join(self.args.log_sample_path if train else self.args.video_folder, f"videos_pred_{ckpt}_{i}.gif"),
                                      [*gif_frames_cond, *gif_frames_pred], fps=4)
+                    # if wandb.run is not None:
+                    #         wandb.log({f"videos_pred_{ckpt}_{i}.gif": wandb.Video(f"videos_pred_{ckpt}_{i}.gif")})
                     if len(gif_frames_pred3) > 0:
                         imageio.mimwrite(os.path.join(self.args.log_sample_path if train else self.args.video_folder, f"videos_gen_{ckpt}_{i}.gif"),
                                          gif_frames_pred3, fps=4)
+                        # if wandb.run is not None:
+                        #     wandb.log({f"videos_gen_{ckpt}_{i}.gif": wandb.Video(f"videos_gen_{ckpt}_{i}.gif")})
                 elif self.condp > 0.0 and self.futrf > 0 and self.futrp > 0.0 and not self.prob_mask_sync:     # (1) Interp + (2) Pred + (3) Gen
                     imageio.mimwrite(os.path.join(self.args.log_sample_path if train else self.args.video_folder, f"videos_interp_{ckpt}_{i}.gif"),
                                      [*gif_frames_cond, *gif_frames_pred, *gif_frames_futr], fps=4)
+                    # if wandb.run is not None:
+                    #         wandb.log({f"videos_interp_{ckpt}_{i}.gif": wandb.Video(f"videos_interp_{ckpt}_{i}.gif")})
                     imageio.mimwrite(os.path.join(self.args.log_sample_path if train else self.args.video_folder, f"videos_pred_{ckpt}_{i}.gif"),
                                      [*gif_frames_cond, *gif_frames_pred2], fps=4)
+                    # if wandb.run is not None:
+                    #     wandb.log({f"videos_pred_{ckpt}_{i}.gif": wandb.Video(f"videos_pred_{ckpt}_{i}.gif")})
                     if len(gif_frames_pred3) > 0:
                         imageio.mimwrite(os.path.join(self.args.log_sample_path if train else self.args.video_folder, f"videos_gen_{ckpt}_{i}.gif"),
                                          gif_frames_pred3, fps=4)
+                        # if wandb.run is not None:
+                        #     wandb.log({f"videos_gen_{ckpt}_{i}.gif": wandb.Video(f"videos_gen_{ckpt}_{i}.gif")})
                 elif self.condp > 0.0 and self.futrf > 0 and self.futrp > 0.0 and self.prob_mask_sync:     # (1) Interp + (3) Gen
                     imageio.mimwrite(os.path.join(self.args.log_sample_path if train else self.args.video_folder, f"videos_interp_{ckpt}_{i}.gif"),
                                      [*gif_frames_cond, *gif_frames_pred, *gif_frames_futr], fps=4)
+                    # if wandb.run is not None:
+                    #         wandb.log({f"videos_interp_{ckpt}_{i}.gif": wandb.Video(f"videos_interp_{ckpt}_{i}.gif")})
                     if len(gif_frames_pred3) > 0:
                         imageio.mimwrite(os.path.join(self.args.log_sample_path if train else self.args.video_folder, f"videos_gen_{ckpt}_{i}.gif"),
                                          gif_frames_pred3, fps=4)
+                        # if wandb.run is not None:
+                        #     wandb.log({f"videos_gen_{ckpt}_{i}.gif": wandb.Video(f"videos_gen_{ckpt}_{i}.gif")})
 
                 del gif_frames_cond, gif_frames_pred, gif_frames_pred2, gif_frames_pred3, gif_frames_futr
 

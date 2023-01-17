@@ -1,7 +1,7 @@
 training:
   L1: false
   batch_size: 64
-  n_epochs: 1000000
+  n_epochs: 1
   n_iters: 3000001
   snapshot_freq: 50000
   snapshot_sampling: true
