@@ -395,28 +395,36 @@ def main():
     print(yaml.dump(args_dict, default_flow_style=False))
     print("<" * 80)
     
-    if args.wandb_project is not None:
-        wandb.init(
-            project=args.wandb_project,
-            name=args.wandb_run_name,
-            entity=args.wandb_entity,
-            config=config_dict
-        )
+    print("\n\n\n\n\n\n\n\n\n\n\n\n")
+    print(args)
+    print("\n\n\n\n\n\n\n\n\n\n\n\n")
+    print(config)
+    print("\n\n\n\n\n\n\n\n\n\n\n\n")
+    print(config_dict)
+    print("\n\n\n\n\n\n\n\n\n\n\n\n")
+    
+    # if args.wandb_project is not None:
+    #     wandb.init(
+    #         project=args.wandb_project,
+    #         name=args.wandb_run_name,
+    #         entity=args.wandb_entity,
+    #         config=config_dict
+    #     )
     
     try:
         runner = NCSNRunner(args, config, config_uncond)
-        if args.test:
-            runner.test()
-        elif args.sample:
-            runner.sample()
-        elif args.video_gen:
-            runner.video_gen()
-        elif args.fast_fid:
-            runner.fast_fid()
-        elif args.interact:
-            pass
-        else:
-            runner.train()
+        # if args.test:
+        #     runner.test()
+        # elif args.sample:
+        #     runner.sample()
+        # elif args.video_gen:
+        #     runner.video_gen()
+        # elif args.fast_fid:
+        #     runner.fast_fid()
+        # elif args.interact:
+        #     pass
+        # else:
+        #     runner.train()
     except:
         logging.error(traceback.format_exc())
 
