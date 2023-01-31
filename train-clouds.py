@@ -54,7 +54,7 @@ def get_data_configs() -> ml_collections.ConfigDict:
     config.channels = 1
     config.dataset = 'StochasticMovingMNIST'
     config.gaussian_dequantization = False
-    config.image_size = 64
+    config.image_size = 128
     config.logit_transform = False
     config.num_digits = 2
     config.num_frames = 5
@@ -187,14 +187,14 @@ def get_training_configs() -> ml_collections.ConfigDict:
     config.checkpoint_freq = 100
     config.log_all_sigmas = False
     config.log_freq = 50
-    config.n_epochs = 500
+    config.n_epochs = 3000
     config.n_iters = 3000001
     config.sample_freq = 50000
     config.snapshot_freq = 1000
     config.snapshot_sampling = True
     config.val_freq = 100
     config.checkpoint_dir = "smmnist_cat"
-    config.checkpoint_freq = 50
+    config.checkpoint_freq = 100
 
     return config
 
@@ -260,7 +260,7 @@ class CloudDataset:
         self.size = size
         self.tfms = T.Compose([
             T.Resize((size, int(size * 1.7))),
-            T.CenterCrop(size)
+            T.CenterCrop(size),
         ])
         data = []
         for file in tqdm(files):
